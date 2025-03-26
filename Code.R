@@ -11,7 +11,7 @@ library(ggplot2)
 # library(factoextra)
 
 # Read the data
-df <- read.csv("TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+df <- read.csv("D:\\SFU\\CMPT 318\\CMPT_318_Final_Project\\TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
 # Interpolate missing values (NA) using linear interpolation
 interpolate_na <- function(x) {
@@ -53,6 +53,19 @@ print(head(pca_result$x))
 
 # Print the rotation (loadings) to understand how each variable contributes to the PCs
 print(pca_result$rotation)
+pc1_loadings <- pca_result$rotation[, 1]  # Loadings for PC1
+pc2_loadings <- pca_result$rotation[, 2]  # Loadings for PC2
+pc3_loadings <- pca_result$rotation[, 3]  # Loadings for PC3
+
+# Print out the loadings
+cat("PCA1 loadings:\n")
+print(pc1_loadings)
+
+cat("PCA2 loadings:\n")
+print(pc2_loadings)
+
+cat("PCA3 loadings:\n")
+print(pc3_loadings)
 
 # Select the first three principal components for further analysis (PC1, PC2, PC3)
 selected_pca_data <- pca_result$x[, 1:3]
@@ -66,13 +79,14 @@ plot <- ggbiplot(pca_result, obs.scale = 1, var.scale = 1, ellipse = TRUE, circl
 # Save the plot
 ggsave("plot.png", plot, width = 8, height = 6, dpi = 300)
 
-# # Alternative plot using factoextra for better label management
-# fviz_pca_biplot(pca_result, 
-#                 repel = TRUE,           # Prevent label overlap
-#                 col.var = "blue",       # Color for variable vectors
-#                 col.ind = "darkred",    # Color for data points
-#                 alpha.ind = 0.3)        # Add transparency to reduce clutter
-# 
-# # Optional: Plot PC1 vs PC3 to visualize more variance
-# fviz_pca_biplot(pca_result, choices = c(1, 3), 
-#                 repel = TRUE, col.var = "blue", col.ind = "darkred", alpha.ind = 0.3) 
+
+# Selecting Time Slot
+time_window_data <- subset(df_standardized, Time >= "12:00:00" & Time <= "16:00:00")
+time_window_data$Year <- format(time_window_data$newDate, "%Y")
+
+# Partition
+training_data <- subset(time_window_data, Year <= 2008)
+testing_data <- subset(time_window_data, Year <= 2009)
+
+
+
