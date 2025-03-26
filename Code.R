@@ -71,6 +71,12 @@ print(pc3_loadings)
 selected_pca_data <- pca_result$x[, 1:3]
 head(selected_pca_data)
 
+
+# get top features
+abs_loadings <- abs(pca_result$rotation[, 1:3])
+feature_importance <- rowSums(abs_loadings)
+top_features <- names(sort(feature_importance, decreasing = TRUE)[1:3])
+
 # Plot the first two principal components using ggbiplot with improvements
 plot <- ggbiplot(pca_result, obs.scale = 1, var.scale = 1, ellipse = TRUE, circle = TRUE,
                  alpha = 0.3,  # Reduce point density
@@ -87,6 +93,30 @@ time_window_data$Year <- format(time_window_data$newDate, "%Y")
 # Partition
 training_data <- subset(time_window_data, Year <= 2008)
 testing_data <- subset(time_window_data, Year <= 2009)
+
+
+# Training Model
+selected_training_data <- training_data[, top_features]
+
+# Step 2: Set up the Hidden Markov Model (HMM) with different number of states
+nstates_range <- seq(4, 16, 2)
+log_likelihoods <- c()
+bic_values <- c()
+
+for (n_states in nstates_range) {
+  model <- depmix(response = cbind(selected_training_data), 
+                  data = training_data, 
+                  nstates = num_states, 
+                  family = list(gaussian()))
+  fitModel <- fit(model)
+  
+  log_likelihood <- logLik(fitModel)
+  bic_value <- BIC(fitModel)
+  
+  log_likelihoods <- c(log_likelihoods, log_likelihood)
+  bic_values <- c(bic_values, bic_value)
+  
+}
 
 
 
