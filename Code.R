@@ -9,6 +9,8 @@
 library(ggbiplot)
 library(ggplot2)
 # library(factoextra)
+install.packages("depmixS4")
+
 
 # Read the data
 df <- read.csv("D:\\SFU\\CMPT 318\\CMPT_318_Final_Project\\TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
@@ -103,11 +105,16 @@ nstates_range <- seq(4, 16, 2)
 log_likelihoods <- c()
 bic_values <- c()
 
+
+response_matrix <- cbind(selected_training_data)
+family_list <- rep(list(gaussian()), ncol(response_matrix))
+
+library(depmixS4)
 for (n_states in nstates_range) {
   model <- depmix(response = cbind(selected_training_data), 
                   data = training_data, 
-                  nstates = num_states, 
-                  family = list(gaussian()))
+                  nstates = n_states, 
+                  family = family_list)
   fitModel <- fit(model)
   
   log_likelihood <- logLik(fitModel)
@@ -116,7 +123,17 @@ for (n_states in nstates_range) {
   log_likelihoods <- c(log_likelihoods, log_likelihood)
   bic_values <- c(bic_values, bic_value)
   
+  cat("Number of States:", num_states, "\n")
+  cat("Log-Likelihood:", log_likelihood, "\n")
+  cat("BIC:", bic_value, "\n\n")
+  
+  
 }
+
+best_model_index <- which.min(bic_values)  # Find the index of the best model
+best_model_states <- states[best_model_index]
+
+cat("Best model has", best_model_states, "states based on BIC and log-likelihood.\n")
 
 
 
