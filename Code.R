@@ -30,7 +30,19 @@ interpolate_na <- function(x) {
 #   return(x)
 # }
 
+getAnomalies <- function(x) {
+  numeric_cols <- sapply(x, is.numeric)
+  anomalies <- abs(x[, numeric_cols, drop = FALSE]) > 3
+  row_anomalies <- rowSums(anomalies) > 0
+  return(row_anomalies)
+}
+
 df_interpolated <- as.data.frame(lapply(df, interpolate_na))
+
+z_scores <- as.data.frame(scale(df_interpolated[, sapply(df_interpolated, is.numeric)], center = TRUE, scale = TRUE))
+anomaly_rows <- getAnomalies(z_scores)
+df_cleaned <- df_interpolated[!anomaly_rows, ]
+
 
 # Standardize the data (center and scale)
 standardize <- function(x) {
@@ -41,16 +53,34 @@ standardize <- function(x) {
   }
 }
 
-df_standardized <- as.data.frame(lapply(df_interpolated, standardize))
+df_standardized <- as.data.frame(lapply(df_cleaned, standardize))
+
+# # PCA
+# numeric_cols <- df_standardized[, sapply(df_standardized, is.numeric), drop = FALSE]
+# pca_result <- prcomp(numeric_cols, center = TRUE, scale. = TRUE)
+# 
+# # Select top features based on PCA loadings
+# abs_loadings <- abs(pca_result$rotation[, 1:3])
+# feature_importance <- rowSums(abs_loadings)
+# top_features <- names(sort(feature_importance, decreasing = TRUE)[1:3])
 
 # PCA
 numeric_cols <- df_standardized[, sapply(df_standardized, is.numeric), drop = FALSE]
 pca_result <- prcomp(numeric_cols, center = TRUE, scale. = TRUE)
 
-# Select top features based on PCA loadings
-abs_loadings <- abs(pca_result$rotation[, 1:3])
-feature_importance <- rowSums(abs_loadings)
+# Select top features based on PCA loadings of the first principal component (PC1)
+abs_loadings <- abs(pca_result$rotation[, 1])  # Loadings for PC1
+feature_importance <- abs_loadings
 top_features <- names(sort(feature_importance, decreasing = TRUE)[1:3])
+
+# Plot the first two principal components using ggbiplot with improvements
+plot <- ggbiplot(pca_result$rotation[,1], obs.scale = 1, var.scale = 1, ellipse = TRUE, circle = TRUE,
+                 alpha = 0.1,  # Reduce point density
+                 varname.adjust = 2)  # Adjust variable name positions to avoid overlap
+
+# Save the plot
+ggsave("plot.png", plot, width = 8, height = 6, dpi = 300)
+
 
 # Selecting Time Slot
 df_standardized$newDate <- as.POSIXlt(df_standardized$Date, format = "%d/%m/%Y")
