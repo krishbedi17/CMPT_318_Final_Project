@@ -16,6 +16,20 @@ interpolate_na <- function(x) {
 }
 
 # Apply interpolation to the entire dataset
+
+
+# clean_outliers <- function(x) {
+#   if (is.numeric(x)) {
+#     q1 <- quantile(x, 0.25, na.rm = TRUE)
+#     q3 <- quantile(x, 0.75, na.rm = TRUE)
+#     iqr <- q3 - q1
+#     lower_bound <- q1 - 1.5 * iqr
+#     upper_bound <- q3 + 1.5 * iqr
+#     x[x < lower_bound | x > upper_bound] <- NA # Replace outliers with NA
+#   }
+#   return(x)
+# }
+
 df_interpolated <- as.data.frame(lapply(df, interpolate_na))
 
 # Standardize the data (center and scale)
@@ -51,6 +65,19 @@ testing_data <- subset(time_window_data, Year <= 2009)
 
 # Train Model
 selected_training_data <- training_data[, top_features]
+
+#Discretize
+# discretize_feature <- function(x, bins = 4) {
+#   if (is.numeric(x)) {
+#     return(as.factor(cut(x, breaks = quantile(x, probs = seq(0, 1, length.out = bins + 1), na.rm = TRUE),
+#                          include.lowest = TRUE, labels = FALSE)))
+#   } else {
+#     return(x)
+#   }
+# }
+
+# Apply discretization
+# training_data_discretized <- as.data.frame(lapply(selected_training_data, discretize_feature))
 
 # Prepare response formulas and families for each feature
 families <- list()
