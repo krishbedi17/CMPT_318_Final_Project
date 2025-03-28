@@ -1,4 +1,102 @@
- 
+# Load necessary libraries
+library(ggbiplot)
+library(ggplot2)
+library(depmixS4)
+
+# Read the data
+df <- read.csv("D:\\SFU\\CMPT 318\\CMPT_318_Final_Project\\TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+
+# cols_to_convert <- c("Global_active_power", "Global_reactive_power", "Voltage", "Global_intensity", "Sub_metering_1", "Sub_metering_2", "Sub_metering_3")
+# print(paste("Remaining NA values:", sum(is.na(df[cols_to_convert]))))
+
+# Interpolate missing values (NA) using linear interpolation
+interpolate_na <- function(x) {
+  if (is.numeric(x)) {
+    return(approx(seq_along(x), x, xout = seq_along(x), method = "linear", rule = 2)$y)
+  } else {
+    return(x)
+  }
+}
+
+# Apply interpolation to the entire dataset
+
+# getAnomalies <- function(x) {
+#   numeric_cols <- sapply(x, is.numeric)
+#   anomalies <- abs(x[, numeric_cols, drop = FALSE]) > 3
+#   row_anomalies <- rowSums(anomalies) > 0
+#   return(row_anomalies)
+# }
+
+df_interpolated <- as.data.frame(lapply(df, interpolate_na))
+cols_to_convert <- c("Global_active_power", "Global_reactive_power", "Voltage", "Global_intensity", "Sub_metering_1", "Sub_metering_2", "Sub_metering_3")
+print(paste("Remaining NA values:", sum(is.na(df_interpolated[cols_to_convert]))))
+
+# 
+# z_scores <- as.data.frame(scale(df_interpolated[, sapply(df_interpolated, is.numeric)], center = TRUE, scale = TRUE))
+# anomaly_rows <- getAnomalies(z_scores)
+# df_cleaned <- df_interpolated[!anomaly_rows, ]
+
+# clean_outliers <- function(x) {
+#   if (is.numeric(x)) {
+#     q1 <- quantile(x, 0.25, na.rm = TRUE)
+#     q3 <- quantile(x, 0.75, na.rm = TRUE)
+#     iqr <- q3 - q1
+#     lower_bound <- q1 - 1.5 * iqr
+#     upper_bound <- q3 + 1.5 * iqr
+#     x[x < lower_bound] <- lower_bound # Cap lower outliers
+#     x[x > upper_bound] <- upper_bound # Cap upper outliers
+#   }
+#   return(x)
+# }
+
+
+
+
+# Standardize the data (center and scale)
+standardize <- function(x) {
+  if (is.numeric(x)) {
+    return(scale(x, center = TRUE, scale = TRUE))
+  } else {
+    return(x)
+  }
+}
+
+df_standardized <- as.data.frame(lapply(df_interpolated, standardize))
+
+# PCA
+numeric_cols <- df_standardized[, sapply(df_standardized, is.numeric), drop = FALSE]
+pca_result <- prcomp(numeric_cols, center = TRUE, scale. = TRUE)
+
+# Select top features based on PCA loadings of the first principal component (PC1)
+abs_loadings <- abs(pca_result$rotation[, 1])  # Loadings for PC1
+feature_importance <- abs_loadings
+top_features <- names(sort(feature_importance, decreasing = TRUE)[1:3])
+
+print(top_features)
+print(abs_loadings)
+
+# Plot the first two principal components using ggbiplot with improvements
+# plot <- ggbiplot(pca_result, obs.scale = 1, var.scale = 1, ellipse = TRUE, circle = TRUE,
+#                  alpha = 0.1,  # Reduce point density
+#                  varname.adjust = 2)  # Adjust variable name positions to avoid overlap
+# 
+# # Save the plot
+# ggsave("plot.png", plot, width = 8, height = 6, dpi = 300)
+
+pca_scores <- pca_result$x
+
+# Convert PCA scores to a data frame for ggplot
+pca_df <- data.frame(PC1 = pca_scores[, 1], PC2 = pca_scores[, 2])
+
+# Plot the first two principal components
+p <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
+  geom_point(alpha = 0.1) +  # Adjust point transparency
+  theme_minimal() +
+  labs(title = "PCA - First Two Principal Components",
+       x = "PC1", y = "PC2")
+
+# Save the plot
+ggsave("pca_plot.png", p, width = 8, height = 6, dpi = 300)
 
 
 # Selecting Time Slot
