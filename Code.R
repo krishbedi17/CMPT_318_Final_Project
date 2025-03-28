@@ -4,7 +4,7 @@ library(ggplot2)
 library(depmixS4)
 
 # Read the data
-df <- read.csv("D:\\SFU\\CMPT 318\\CMPT_318_Final_Project\\TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+df <- read.csv("TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
 # cols_to_convert <- c("Global_active_power", "Global_reactive_power", "Voltage", "Global_intensity", "Sub_metering_1", "Sub_metering_2", "Sub_metering_3")
 # print(paste("Remaining NA values:", sum(is.na(df[cols_to_convert]))))
@@ -75,13 +75,17 @@ top_features <- names(sort(feature_importance, decreasing = TRUE)[1:3])
 print(top_features)
 print(abs_loadings)
 
-# Plot the first two principal components using ggbiplot with improvements
+# # Plot the first two principal components using ggbiplot with improvements
 # plot <- ggbiplot(pca_result, obs.scale = 1, var.scale = 1, ellipse = TRUE, circle = TRUE,
 #                  alpha = 0.1,  # Reduce point density
 #                  varname.adjust = 2)  # Adjust variable name positions to avoid overlap
 # 
 # # Save the plot
 # ggsave("plot.png", plot, width = 8, height = 6, dpi = 300)
+
+plot(pca_result$x[, 1], pca_result$x[, 2], 
+     xlab = "PC1", ylab = "PC2", 
+     main = "PCA: First Two Principal Components")
 
 pca_scores <- pca_result$x
 
