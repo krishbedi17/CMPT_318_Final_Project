@@ -75,6 +75,83 @@ top_features <- names(sort(feature_importance, decreasing = TRUE)[1:3])
 print(top_features)
 print(abs_loadings)
 
+# <<<<<<< Updated upstream
+# =======
+biplot(pca_result, scale = 0)
+
+# Define current date and user info
+# Update date and time
+# current_datetime <- "2025-03-28 02:25:55"
+# user_login <- "pga47"
+# 
+# # Load ggrepel for non-overlapping labels (if not already loaded)
+# # If you don't have ggrepel installed, uncomment and run:
+# # install.packages("ggrepel")
+# library(ggrepel)
+# 
+# # Define scaling factors explicitly
+# var.scale <- 1        # Scale factor for variable vectors
+# varname.adjust <- 1.2 # Adjustment factor for variable labels 
+# arrow.size <- 1.5     # Size of arrow heads
+# 
+# # Calculate variance explained
+# var_explained <- pca_result$sdev^2 / sum(pca_result$sdev^2) * 100
+# 
+# # Sample data points to reduce plot rendering time
+# set.seed(123) # For reproducibility
+# sample_size <- min(1000, nrow(pca_result$x)) # Limit to 1000 points
+# sampled_indices <- sample(1:nrow(pca_result$x), sample_size)
+# sampled_points <- as.data.frame(pca_result$x[sampled_indices, ])
+# 
+# # Create a simplified PCA biplot with clear layers and non-overlapping labels
+# pca_plot <- ggplot() + 
+#   # Add sampled points as the bottom layer
+#   geom_point(data = sampled_points, 
+#              aes(x = PC1, y = PC2), 
+#              color = "lightgray", 
+#              alpha = 0.2,
+#              size = 1) +
+#   # Add variable vectors on top as arrows
+#   geom_segment(data = as.data.frame(pca_result$rotation), 
+#                aes(x = 0, y = 0, 
+#                    xend = PC1 * var.scale, 
+#                    yend = PC2 * var.scale),
+#                arrow = arrow(length = unit(arrow.size, "mm")), 
+#                color = "red", 
+#                size = 0.8) +
+#   # Add variable names with repelling labels to avoid overlap
+#   geom_text_repel(data = as.data.frame(pca_result$rotation),
+#                   aes(x = PC1 * var.scale * varname.adjust, 
+#                       y = PC2 * var.scale * varname.adjust, 
+#                       label = rownames(pca_result$rotation)),
+#                   color = "red",
+#                   size = 5,
+#                   box.padding = 0.35,
+#                   point.padding = 0.5,
+#                   segment.color = "gray50",
+#                   max.overlaps = 15,
+#                   min.segment.length = 0) +
+#   # Add theme and labels
+#   theme_minimal() +
+#   theme(
+#     panel.grid.major = element_line(color = "gray90"),
+#     panel.grid.minor = element_blank(),
+#     plot.title = element_text(face = "bold", size = 14),
+#     plot.subtitle = element_text(size = 12)
+#   ) +
+#   labs(
+#     title = "PCA Biplot (PC1 vs PC2)",
+#     subtitle = paste0("Analysis date: ", current_datetime, " | User: ", user_login),
+#     x = sprintf("PC1 (%.1f%%)", var_explained[1]),
+#     y = sprintf("PC2 (%.1f%%)", var_explained[2]),
+#     caption = paste("Top features:", paste(top_features, collapse = ", "))
+#   ) +
+#   coord_fixed()  # Keep aspect ratio 1:1
+# 
+# # Print the plot
+# print(pca_plot)
+
+# >>>>>>> Stashed changes
 # # Plot the first two principal components using ggbiplot with improvements
 # plot <- ggbiplot(pca_result, obs.scale = 1, var.scale = 1, ellipse = TRUE, circle = TRUE,
 #                  alpha = 0.1,  # Reduce point density
@@ -83,6 +160,7 @@ print(abs_loadings)
 # # Save the plot
 # ggsave("plot.png", plot, width = 8, height = 6, dpi = 300)
 
+# <<<<<<< Updated upstream
 plot(pca_result$x[, 1], pca_result$x[, 2], 
      xlab = "PC1", ylab = "PC2", 
      main = "PCA: First Two Principal Components")
@@ -101,6 +179,10 @@ p <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
 
 # Save the plot
 ggsave("pca_plot.png", p, width = 8, height = 6, dpi = 300)
+# =======
+# 
+# 
+# >>>>>>> Stashed changes
 
 
 # Selecting Time Slot
