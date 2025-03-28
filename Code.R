@@ -79,6 +79,22 @@ print(abs_loadings)
 # =======
 biplot(pca_result, scale = 0)
 
+pca_result.var <- pca_result$sdev^2
+pca_result.var.per <- round(pca_result.var/sum(pca_result.var)*100,1)
+barplot(pca_result.var.per,main="Scree Plot", xlab ="Principal Component", ylab ="Percent Variation")
+
+# Open a PNG graphics device
+png("scree_plot.png", width = 800, height = 600)
+
+# Generate the Scree Plot
+barplot(pca_result.var.per,
+        main = "Scree Plot", 
+        xlab = "Principal Component", 
+        ylab = "Percent Variation")
+
+# Close the graphics device
+dev.off()
+
 # Define current date and user info
 # Update date and time
 # current_datetime <- "2025-03-28 02:25:55"
