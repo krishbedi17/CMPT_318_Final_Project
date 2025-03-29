@@ -4,7 +4,7 @@ library(ggplot2)
 library(depmixS4)
 
 # Read the data
-df <- read.csv("D:\\SFU\\CMPT 318\\CMPT_318_Final_Project\\TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+df <- read.csv("TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
 # cols_to_convert <- c("Global_active_power", "Global_reactive_power", "Voltage", "Global_intensity", "Sub_metering_1", "Sub_metering_2", "Sub_metering_3")
 # print(paste("Remaining NA values:", sum(is.na(df[cols_to_convert]))))
@@ -254,7 +254,7 @@ bic_values <- c()
 
 for (n_states in nstates_range) {
   model <- depmix(response = responses,
-                  data = training_data,
+                  data = training_data_discretized,
                   nstates = n_states,
                   family = families,
                   ntimes = nrow(training_data_discretized))
