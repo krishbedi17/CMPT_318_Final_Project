@@ -4,7 +4,7 @@ library(ggplot2)
 library(depmixS4)
 
 # Read the data
-df <- read.csv("TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+df <- read.csv("D:\\SFU\\CMPT 318\\CMPT_318_Final_Project\\TermProjectData.txt", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
 # cols_to_convert <- c("Global_active_power", "Global_reactive_power", "Voltage", "Global_intensity", "Sub_metering_1", "Sub_metering_2", "Sub_metering_3")
 # print(paste("Remaining NA values:", sum(is.na(df[cols_to_convert]))))
@@ -75,8 +75,6 @@ top_features <- names(sort(feature_importance, decreasing = TRUE)[1:3])
 print(top_features)
 print(abs_loadings)
 
-# <<<<<<< Updated upstream
-# =======
 biplot(pca_result, scale = 0)
 
 pca_result.var <- pca_result$sdev^2
@@ -173,12 +171,10 @@ dev.off()
 #                  alpha = 0.1,  # Reduce point density
 #                  varname.adjust = 2)  # Adjust variable name positions to avoid overlap
 # 
-# # Save the plot
-# ggsave("plot.png", plot, width = 8, height = 6, dpi = 300)
-
-# <<<<<<< Updated upstream
-plot(pca_result$x[, 1], pca_result$x[, 2], 
-     xlab = "PC1", ylab = "PC2", 
+# Save the plot
+ggsave("plot.png", plot, width = 8, height = 6, dpi = 300)
+plot(pca_result$x[, 1], pca_result$x[, 2],
+     xlab = "PC1", ylab = "PC2",
      main = "PCA: First Two Principal Components")
 
 pca_scores <- pca_result$x
@@ -195,10 +191,6 @@ p <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
 
 # Save the plot
 ggsave("pca_plot.png", p, width = 8, height = 6, dpi = 300)
-# =======
-# 
-# 
-# >>>>>>> Stashed changes
 
 
 # Selecting Time Slot
@@ -233,25 +225,30 @@ selected_training_data <- training_data[, top_features]
 # }
 
 # Apply discretization
-# training_data_discretized <- as.data.frame(lapply(selected_training_data, discretize_feature))
+discretize <- function(x) {
+  lower <- floor(x * 2) / 2
+  upper <- ceiling(x * 2) / 2
+  ifelse(abs(x - lower) < abs(x - upper), lower, upper)
+}
+training_data_discretized <- as.data.frame(lapply(selected_training_data, discretize))
 
 # Prepare response formulas and families for each feature
 families <- list()
 responses <- list()
 
 for (feature in top_features) {
-  if (is.numeric(training_data[[feature]])) {
+  if (is.numeric(training_data_discretized[[feature]])) {
     families[[feature]] <- gaussian()
     responses[[feature]] <- as.formula(paste(feature, "~ 1"))
   } else {
-    training_data[[feature]] <- as.factor(training_data[[feature]])  # Convert to factor if categorical
+    training_data_discretized[[feature]] <- as.factor(training_data_discretized[[feature]])  # Convert to factor if categorical
     families[[feature]] <- multinomial()
     responses[[feature]] <- as.formula(paste(feature, "~ 1"))
   }
 }
 
 # Set up the Hidden Markov Model (HMM)
-nstates_range <- seq(4, 16, 2)
+nstates_range <- seq(4, 8, 2)
 log_likelihoods <- c()
 bic_values <- c()
 
@@ -260,7 +257,7 @@ for (n_states in nstates_range) {
                   data = training_data,
                   nstates = n_states,
                   family = families,
-                  ntimes = nrow(training_data))
+                  ntimes = nrow(training_data_discretized))
   
   fitModel <- fit(model)
   
