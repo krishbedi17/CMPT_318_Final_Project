@@ -232,7 +232,7 @@ discretize <- function(x) {
   ifelse(abs(x - lower) < abs(x - upper), lower, upper)
 }
 training_data_discretized <- as.data.frame(lapply(selected_training_data, discretize))
-selected_test_data_discretized<- as.data.frame(lapply(selected_test_data, discretize))
+testing_data_discretized<- as.data.frame(lapply(selected_test_data, discretize))
 # Prepare response formulas and families for each feature
 families <- list()
 responses <- list()
@@ -252,11 +252,11 @@ test_families <- list()
 test_responses <- list()
 
 for (feature in top_features) {
-  if (is.numeric(selected_test_data_discretized[[feature]])) {
+  if (is.numeric(testing_data_discretized[[feature]])) {
     test_families[[feature]] <- gaussian()
     test_responses[[feature]] <- as.formula(paste(feature, "~ 1"))
   } else {
-    selected_test_data_discretized[[feature]] <- as.factor(selected_test_data_discretized[[feature]])  # Convert to factor if categorical
+    testing_data_discretized[[feature]] <- as.factor(testing_data_discretized[[feature]])  # Convert to factor if categorical
     test_families[[feature]] <- multinomial()
     test_responses[[feature]] <- as.formula(paste(feature, "~ 1"))
   }
@@ -295,11 +295,18 @@ best_model_states <- nstates_range[best_model_index]
 cat("Best model has", best_model_states, "states based on BIC and log-likelihood.\n")
 
 
+# any(is.na(training_data_discretized))
+# any(sapply(training_data_discretized, is.nan))
+# any(sapply(training_data_discretized, is.infinite))
+# 
+# # Check structure of data
+# str(training_data_discretized)
+
 test_model <- depmix(response = test_responses,
-                data = selected_test_data_discretized,
+                data = testing_data_discretized,
                 nstates = best_model_states,
                 family = test_families,
-                ntimes = nrow(selected_test_data_discretized))
+                ntimes = nrow(testing_data_discretized))
 
 # Set parameters from the trained model
 setpars(test_model, getpars(fit_model))
@@ -308,7 +315,7 @@ train_log_likelihood <- logLik(fit_model)
 test_log_likelihood <- logLik(test_model)
 
 normalized_train_log_likelihood <- as.numeric(train_log_likelihood) / nrow(training_data_discretized)
-normalized_test_log_likelihood <- as.numeric(test_log_likelihood) / nrow(selected_test_data_discretized)
+normalized_test_log_likelihood <- as.numeric(test_log_likelihood) / nrow(testing_data_discretized)
 
 cat("Normalized Train Log-Likelihood:", normalized_train_log_likelihood, "\n")
 cat("Normalized Test Log-Likelihood:", normalized_test_log_likelihood, "\n")
