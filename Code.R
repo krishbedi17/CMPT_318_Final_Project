@@ -172,25 +172,25 @@ dev.off()
 #                  varname.adjust = 2)  # Adjust variable name positions to avoid overlap
 # 
 # Save the plot
-ggsave("plot.png", plot, width = 8, height = 6, dpi = 300)
-plot(pca_result$x[, 1], pca_result$x[, 2],
-     xlab = "PC1", ylab = "PC2",
-     main = "PCA: First Two Principal Components")
+# ggsave("plot.png", plot, width = 8, height = 6, dpi = 300)
+# plot(pca_result$x[, 1], pca_result$x[, 2],
+#      xlab = "PC1", ylab = "PC2",
+#      main = "PCA: First Two Principal Components")
 
-pca_scores <- pca_result$x
-
-# Convert PCA scores to a data frame for ggplot
-pca_df <- data.frame(PC1 = pca_scores[, 1], PC2 = pca_scores[, 2])
-
-# Plot the first two principal components
-p <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
-  geom_point(alpha = 0.1) +  # Adjust point transparency
-  theme_minimal() +
-  labs(title = "PCA - First Two Principal Components",
-       x = "PC1", y = "PC2")
-
-# Save the plot
-ggsave("pca_plot.png", p, width = 8, height = 6, dpi = 300)
+# pca_scores <- pca_result$x
+# 
+# # Convert PCA scores to a data frame for ggplot
+# pca_df <- data.frame(PC1 = pca_scores[, 1], PC2 = pca_scores[, 2])
+# 
+# # Plot the first two principal components
+# p <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
+#   geom_point(alpha = 0.1) +  # Adjust point transparency
+#   theme_minimal() +
+#   labs(title = "PCA - First Two Principal Components",
+#        x = "PC1", y = "PC2")
+# 
+# # Save the plot
+# ggsave("pca_plot.png", p, width = 8, height = 6, dpi = 300)
 
 
 # Selecting Time Slot
@@ -213,6 +213,7 @@ testing_data <- subset(time_window_monday_data, Year == 2009)
 
 # Train Model
 selected_training_data <- training_data[, top_features]
+selected_test_data <- testing_data[, top_features]
 
 #Discretize
 # discretize_feature <- function(x, bins = 4) {
@@ -231,7 +232,7 @@ discretize <- function(x) {
   ifelse(abs(x - lower) < abs(x - upper), lower, upper)
 }
 training_data_discretized <- as.data.frame(lapply(selected_training_data, discretize))
-
+selected_test_data_discretized<- as.data.frame(lapply(selected_test_data, discretize))
 # Prepare response formulas and families for each feature
 families <- list()
 responses <- list()
@@ -247,8 +248,23 @@ for (feature in top_features) {
   }
 }
 
+test_families <- list()
+test_responses <- list()
+
+for (feature in top_features) {
+  if (is.numeric(selected_test_data_discretized[[feature]])) {
+    test_families[[feature]] <- gaussian()
+    test_responses[[feature]] <- as.formula(paste(feature, "~ 1"))
+  } else {
+    selected_test_data_discretized[[feature]] <- as.factor(selected_test_data_discretized[[feature]])  # Convert to factor if categorical
+    test_families[[feature]] <- multinomial()
+    test_responses[[feature]] <- as.formula(paste(feature, "~ 1"))
+  }
+}
+
+
 # Set up the Hidden Markov Model (HMM)
-nstates_range <- seq(4, 8, 2)
+nstates_range <- seq(4, 16, 2)
 log_likelihoods <- c()
 bic_values <- c()
 
@@ -277,3 +293,22 @@ best_model_index <- which.min(bic_values)
 best_model_states <- nstates_range[best_model_index]
 
 cat("Best model has", best_model_states, "states based on BIC and log-likelihood.\n")
+
+
+test_model <- depmix(response = test_responses,
+                data = selected_test_data_discretized,
+                nstates = best_model_states,
+                family = test_families,
+                ntimes = nrow(selected_test_data_discretized))
+
+# Set parameters from the trained model
+setpars(test_model, getpars(fit_model))
+
+train_log_likelihood <- logLik(fit_model)
+test_log_likelihood <- logLik(test_model)
+
+normalized_train_log_likelihood <- as.numeric(train_log_likelihood) / nrow(training_data_discretized)
+normalized_test_log_likelihood <- as.numeric(test_log_likelihood) / nrow(selected_test_data_discretized)
+
+cat("Normalized Train Log-Likelihood:", normalized_train_log_likelihood, "\n")
+cat("Normalized Test Log-Likelihood:", normalized_test_log_likelihood, "\n")
